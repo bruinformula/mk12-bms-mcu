@@ -1,0 +1,35 @@
+# --- OS Specific Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Build Artifacts ---
+Debug/
+Release/
+build/
+*.elf
+*.map
+*.bin
+*.hex
+*.srec
+*.lst
+*.o
+*.d
+*.a
+*.su
+*.crl
+*.obj
+
+# --- IDE Specific Files ---
+.metadata/
+*.log
+
+# --- Backup/Temporary Files ---
+*.bak
+*~
+*.swp
+*.tmp
