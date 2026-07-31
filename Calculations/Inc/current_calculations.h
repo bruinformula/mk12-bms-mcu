@@ -14,6 +14,8 @@
 #include "safety_handler.h"
 
 #define OVERCURRENT_THRESHOLD 200
+#define AIR_WELD_CURRENT_THRESHOLD 2.0
+#define AIR_WELD_SET_SAMPLES 5
 
 typedef struct CURRENT_CONTEXT{
 	uint16_t current_sensor_low_adc;
@@ -24,6 +26,7 @@ typedef struct CURRENT_CONTEXT{
 } CURRENT_CONTEXT;
 extern volatile CURRENT_CONTEXT current_context;
 
+void checkAIRWeld(float selected_current);
 void calculateCurrent();
 
 #endif /* INC_CURRENT_CALCULATIONS_H_ */
