@@ -14,12 +14,41 @@ static float filtered_current_low = 0.0f;
 static float filtered_current_high = 0.0f;
 static uint8_t overcurrent_set_count = 0;
 static uint8_t overcurrent_clear_count = 0;
+static uint8_t air_weld_set_count = 0;
 
 #define CURRENT_FILTER_ALPHA        0.10f
 #define HIGH_RANGE_ENTER_CURRENT    30.0f
 #define HIGH_RANGE_EXIT_CURRENT     25.0f
 #define OVERCURRENT_SET_SAMPLES     5U
 #define OVERCURRENT_CLEAR_SAMPLES   10U
+
+void checkAIRWeld(float selected_current) {
+	GPIO_PinState pos_air = HAL_GPIO_ReadPin(POS_AIR_GND_GPIO_Port, POS_AIR_GND_Pin);
+	GPIO_PinState neg_air = HAL_GPIO_ReadPin(NEG_AIR_GND_GPIO_Port, NEG_AIR_GND_Pin);
+	GPIO_PinState precharge = HAL_GPIO_ReadPin(PRECHARGE_GPIO_Port, PRECHARGE_Pin);
+
+	bool are_airs_open = (pos_air == GPIO_PIN_RESET) &&
+						(neg_air == GPIO_PIN_RESET) &&
+						(precharge == GPIO_PIN_RESET);
+
+	if (are_airs_open) {
+		if (fabsf(selected_current) > AIR_WELD_CURRENT_THRESHOLD) {
+			if (air_weld_set_count < AIR_WELD_SET_SAMPLES) {
+				air_weld_set_count++;
+			}
+		} else {
+			// Current not above threshold so reset sample count back to zero
+			air_weld_set_count = 0;
+		}
+	} else {
+		// AIRs closed already
+		air_weld_set_count = 0;
+	}
+
+	if (air_weld_set_count >= AIR_WELD_SET_SAMPLES ) {
+		BMS_SetFault(FAULT_AIR_WELD);
+	}
+}
 
 void calculateCurrent() {
 	float selected_current;
@@ -51,6 +80,8 @@ void calculateCurrent() {
 	current_context.current_sensor_val = selected_current;
 
 	// FAULT HANDLING
+	checkAIRWeld(selected_current);
+
 	uint8_t faults_set = 0;
 	uint8_t faults_clear = 0;
 
