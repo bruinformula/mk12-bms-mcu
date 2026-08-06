@@ -78,9 +78,9 @@ void computeAllVoltages(uint8_t tIC, cell_asic *ic) {
 #endif
 
     if (faults_set) {
-    	BMS_SetFault(faults_set);
+    	BMS_UpdateFaultDebounced(faults_set, true);
     }
     if (faults_clear) {
-    	BMS_ClearFault(faults_clear);
+    	BMS_UpdateFaultDebounced(faults_clear, false);
     }
 }

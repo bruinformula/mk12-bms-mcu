@@ -12,6 +12,7 @@
 
 #include "gpio.h"
 #include "bms_state.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include "cmsis_os.h"
 #include "freertos_handles.h"
@@ -45,6 +46,19 @@ extern volatile BMS_FaultRegister fault_register;
 
 void BMS_SetFault(uint8_t fault);
 void BMS_ClearFault(uint8_t fault);
+
+
+#define BMS_FAULT_SET_DEBOUNCE_MS 100U
+#define BMS_FAULT_CLEAR_DEBOUNCE_MS 150U
+
+typedef struct {
+    bool latched;
+    bool pending;
+    bool requested_active;
+    uint32_t transition_time_ms;
+} BMS_FaultDebounceState;
+
+void BMS_UpdateFaultDebounced(uint8_t fault, bool active);
 uint8_t BMS_GetFaultRegister();
 void BMS_CheckFaultRegister();
 

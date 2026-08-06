@@ -9,6 +9,7 @@
 
 static FDCAN_TxHeaderTypeDef Shutdown_Lost_TxHeader;
 static uint8_t Shutdown_Lost_TxData[8];
+static BMS_FaultDebounceState fault_debounce_states[8];
 
 void configureShutdownLostTxMsg() {
 	configureFDCAN_TxMessage_STD(&Shutdown_Lost_TxHeader, BMS_SHUTDOWN_LOST_TX_ID);
@@ -72,6 +73,56 @@ void apply_shutdown_power_state(bool shutdown_asserted) {
 }
 
 volatile BMS_FaultRegister fault_register;
+
+static void BMS_UpdateDebouncedFaultBit(uint8_t fault_bit, bool active) {
+    uint8_t index = 0;
+    while ((fault_bit >>= 1U) != 0U) {
+        index++;
+    }
+
+    if (index >= 8U) {
+        return;
+    }
+
+    BMS_FaultDebounceState *state = &fault_debounce_states[index];
+    uint32_t now = HAL_GetTick();
+
+    if (state->requested_active != active) {
+        state->requested_active = active;
+        state->pending = true;
+        state->transition_time_ms = now;
+        return;
+    }
+
+    if (!state->pending) {
+        return;
+    }
+
+    uint32_t debounce_ms = active ? BMS_FAULT_SET_DEBOUNCE_MS : BMS_FAULT_CLEAR_DEBOUNCE_MS;
+    if ((now - state->transition_time_ms) < debounce_ms) {
+        return;
+    }
+
+    state->pending = false;
+    if (active) {
+        if (!state->latched) {
+            state->latched = true;
+            BMS_SetFault(fault_bit);
+        }
+    } else if (state->latched) {
+        state->latched = false;
+        BMS_ClearFault(fault_bit);
+    }
+}
+
+void BMS_UpdateFaultDebounced(uint8_t fault, bool active) {
+    for (uint8_t bit = 0U; bit < 8U; ++bit) {
+        uint8_t fault_bit = (1U << bit);
+        if ((fault & fault_bit) != 0U) {
+            BMS_UpdateDebouncedFaultBit(fault_bit, active);
+        }
+    }
+}
 
 void BMS_SetFault(uint8_t fault) {
 	// CRITICAL REGION
