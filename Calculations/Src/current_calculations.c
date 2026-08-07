@@ -45,9 +45,11 @@ void checkAIRWeld(float selected_current) {
 		air_weld_set_count = 0;
 	}
 
+#if (BMS_FAULT_AIR_WELD == BMS_FAULT_ENABLED)
 	if (air_weld_set_count >= AIR_WELD_SET_SAMPLES ) {
 		BMS_SetFault(FAULT_AIR_WELD);
 	}
+#endif
 }
 
 void calculateCurrent() {

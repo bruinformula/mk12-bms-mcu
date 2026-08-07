@@ -129,8 +129,18 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  // ADBMS6830 + ADC INITIALIZATION
+  // ADBMS6830 INITIALIZATION
   adBms6830_init_config(TOTAL_IC, IC);
+
+  // RUN OPEN WIRE TEST
+#if (BMS_FAULT_OPEN_WIRE == BMS_FAULT_ENABLED)
+  if (adBms6830_run_open_wire_test(TOTAL_IC, IC)) {
+    BMS_SetFault(FAULT_OPEN_WIRE);
+    BMS_CheckFaultRegister();
+  }
+#endif
+
+  // ADC INITIALIZATION
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
   adBms6830_start_aux_voltage_measurment(TOTAL_IC, IC);
   startADC();
