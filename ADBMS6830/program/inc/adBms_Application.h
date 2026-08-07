@@ -74,6 +74,7 @@ void adBms6830_run_thermal_shutdown_self_test(uint8_t tIC, cell_asic *ic);
 void adBms6830_run_fuse_ed_self_test(uint8_t tIC, cell_asic *ic);
 void adBms6830_run_fuse_med_self_test(uint8_t tIC, cell_asic *ic);
 void adBms6830_run_tmodchk_self_test(uint8_t tIC, cell_asic *ic);
+bool adBms6830_run_open_wire_test(uint8_t tIC, cell_asic *ic);
 void adBms6830_check_latent_fault_csflt_status_bits(uint8_t tIC, cell_asic *ic);
 void adBms6830_check_rdstatc_err_bit_functionality(uint8_t tIC, cell_asic *ic);
 void adBms6830_cell_openwire_test(uint8_t tIC, cell_asic *ic);

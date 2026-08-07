@@ -27,7 +27,7 @@ typedef struct {
     uint8_t overcurrent  : 1;
     uint8_t isospi_disconnect : 1;
     uint8_t air_weld     : 1;
-    uint8_t reserved     : 1;
+    uint8_t open_wire    : 1;
 } BMS_FaultBits;
 
 #define FAULT_OVERVOLTAGE        (1U << 0)
@@ -37,6 +37,7 @@ typedef struct {
 #define FAULT_OVERCURRENT        (1U << 4)
 #define FAULT_ISOSPI_DISCONNECT  (1U << 5)
 #define FAULT_AIR_WELD           (1U << 6)
+#define FAULT_OPEN_WIRE          (1U << 7)
 
 typedef union {
     uint8_t reg;

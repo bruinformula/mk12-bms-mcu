@@ -184,6 +184,10 @@ void run_command(int cmd)
   case 21:
     adBms6830_write_config(TOTAL_IC, &IC[0]);
     break;
+  
+  case 22:
+    adBms6830_run_open_wire_test(TOTAL_IC, &IC[0]);
+    break;
 
   case 0:
     printMenu();
@@ -668,6 +672,67 @@ void adBms6830_clear_fcell_measurement(uint8_t tIC)
 #else
   printf("Fcell Registers Cleared\n\n");
 #endif
+}
+
+/**
+*******************************************************************************
+ * @brief Run test to make sure all cells are connected to ICs
+ * @return True if any open wire is detected
+*******************************************************************************
+ */
+bool adBms6830_run_open_wire_test(uint8_t tIC, cell_asic *ic)
+{
+  uint16_t baseline_voltages[tIC][CELL];
+  uint16_t even_test_voltages[tIC][CELL];
+  uint16_t odd_test_voltages[tIC][CELL];
+  bool fault_detected = false;
+
+  // Take baseline measurement voltages
+  adBms6830_start_adc_s_voltage_measurment(tIC);
+  HAL_Delay(2);
+  adBms6830_read_s_voltages(tIC, ic);
+  for (uint8_t i = 0; i < tIC; i++)
+    for (uint8_t c = 0; c < CELL; c++)
+      baseline_voltages[i][c] = ic[i].scell.sc_codes[c];
+
+  // Take even channel voltage measurements
+  adBmsWakeupIc(tIC);
+  adBms6830_Adsv(SINGLE, DCP_OFF, OW_ON_EVEN_CH);
+  HAL_Delay(2);
+  adBms6830_read_s_voltages(tIC, ic);
+  for (uint8_t i = 0; i < tIC; i++)
+    for (uint8_t c = 0; c < CELL; c++)
+      even_test_voltages[i][c] = ic[i].scell.sc_codes[c];
+
+  // Take odd channel voltage measurements
+  adBmsWakeupIc(tIC);
+  adBms6830_Adsv(SINGLE, DCP_OFF, OW_ON_ODD_CH);
+  HAL_Delay(2);
+  adBms6830_read_s_voltages(tIC, ic);
+  for (uint8_t i = 0; i < tIC; i++)
+    for (uint8_t c = 0; c < CELL; c++)
+      odd_test_voltages[i][c] = ic[i].scell.sc_codes[c];
+
+  // Find any difference that is greater than threshold, first set to normal reading
+  adBmsWakeupIc(tIC);
+  adBms6830_Adcv(RD_ON, CONTINUOUS, DCP_OFF, RSTF_OFF, OW_OFF_ALL_CH);
+
+  for (uint8_t i = 0; i < tIC; i++) {
+    for (uint8_t c = 0; c < CELL; c++) {
+      uint16_t test_voltage = (c % 2 != 0) ? even_test_voltages[i][c] : odd_test_voltages[i][c];
+      uint16_t base_voltage = baseline_voltages[i][c];
+
+      if (base_voltage > test_voltage && (base_voltage - test_voltage) > OWC_Threshold || test_voltage < 1000) {
+        ic[i].diag_result.cell_ow[c] = 1;
+        ic[i].owcell.cell_ow_even[c] = (c % 2 != 0) ? test_voltage : 0;
+        ic[i].owcell.cell_ow_odd[c] = (c % 2 == 0) ? test_voltage : 0;
+        fault_detected = true;
+      } else
+        ic[i].diag_result.cell_ow[c] = 0;
+    }
+  }
+
+  return fault_detected;
 }
 
 /** @}*/
