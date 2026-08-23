@@ -1,7 +1,7 @@
 #include "voltage_calculations.h"
 
 volatile VOLTAGE_CONTEXT voltage_context;
-static float local_voltage_conversions[TOTAL_IC][CELLS_PER_IC];
+static float local_voltage_conversions[TOTAL_IC][MAX_CELLS_PER_IC];
 
 void computeAllVoltages(uint8_t tIC, cell_asic *ic) {
     float local_lowest = INFINITY;
@@ -16,7 +16,7 @@ void computeAllVoltages(uint8_t tIC, cell_asic *ic) {
 
     float measured_pack = 0.0f;
 	for (size_t i = 0; i < tIC; ++i) {
-		for (size_t j = 0; j < CELLS_PER_IC; ++j) {
+		for (size_t j = 0; j < CELLS_PER_IC(i); ++j) {
 			float cell_voltage = getVoltage(ic[i].cell.c_codes[j]);
 			local_voltage_conversions[i][j] = cell_voltage;
 
@@ -34,6 +34,11 @@ void computeAllVoltages(uint8_t tIC, cell_asic *ic) {
 			}
 
 			measured_pack += cell_voltage;
+		}
+
+		// Set the 10th spot (9th index) for every odd-ic sub-array to NAN
+		for (size_t j = CELLS_PER_IC(i); j < MAX_CELLS_PER_IC; ++j) {
+			local_voltage_conversions[i][j] = NAN;
 		}
 	}
 

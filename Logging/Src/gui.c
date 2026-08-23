@@ -209,11 +209,11 @@ static int append_json_scaled_int(char **cursor, size_t *remaining, float value,
 }
 
 static int append_scaled_matrix(char **cursor, size_t *remaining, const char *name,
-		volatile float values[TOTAL_IC][CELLS_PER_IC]) {
+		volatile float values[TOTAL_IC][MAX_CELLS_PER_IC]) {
 	if (append_json(cursor, remaining, "\"%s\":[", name) != 0) return -1;
 	for (size_t ic = 0; ic < TOTAL_IC; ++ic) {
 		if (append_json(cursor, remaining, "%s[", (ic == 0) ? "" : ",") != 0) return -1;
-		for (size_t cell = 0; cell < CELLS_PER_IC; ++cell) {
+		for (size_t cell = 0; cell < CELLS_PER_IC(ic); ++cell) {
 			if (cell > 0 && append_json(cursor, remaining, ",") != 0) return -1;
 			if (append_json_scaled_int(cursor, remaining, values[ic][cell], 100U) != 0) return -1;
 		}

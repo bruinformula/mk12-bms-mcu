@@ -22,7 +22,7 @@ typedef struct TEMP_CONTEXT {
 	float avg_cell_temp;
 	float lowest_cell_temp;
 	float highest_cell_temp;
-	float temp_conversions[TOTAL_IC][CELLS_PER_IC];
+	float temp_conversions[TOTAL_IC][MAX_CELLS_PER_IC];
 	int num_valid_cell_temps;
 } TEMP_CONTEXT;
 extern volatile TEMP_CONTEXT temp_context;

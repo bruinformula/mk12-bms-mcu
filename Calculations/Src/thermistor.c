@@ -8,7 +8,7 @@
 #include "thermistor.h"
 
 volatile TEMP_CONTEXT temp_context;
-static float local_temp_conversions[TOTAL_IC][CELLS_PER_IC];
+static float local_temp_conversions[TOTAL_IC][MAX_CELLS_PER_IC];
 
 static const float voltage_table[33] = {
 		2.44, 2.42, 2.40, 2.38, 2.35, 2.32, 2.27, 2.23, 2.17, 2.11, 2.05, 1.99, 1.92, 1.86, 1.8, 1.74, 1.68,
@@ -58,22 +58,22 @@ void computeAllTemps(uint8_t tIC, cell_asic *ic) {
 		int potential_invalid_codes = 0;
 
 		// FIRST PASS: Scan for IC Disconnect.
-		for (size_t j = 0; j < CELLS_PER_IC; ++j) {
+		for (size_t j = 0; j < CELLS_PER_IC(i); ++j) {
 			if (ic[i].aux.a_codes[j] == -1) {
 				potential_invalid_codes++;
 			}
 		}
 
-		if (potential_invalid_codes == CELLS_PER_IC) {
+		if (potential_invalid_codes == CELLS_PER_IC(i)) {
 			any_ic_disconnect = true;
-			for (size_t j = 0; j < CELLS_PER_IC; ++j) {
+			for (size_t j = 0; j < CELLS_PER_IC(i); ++j) {
 				local_temp_conversions[i][j] = NAN;
 			}
 			continue;
 		}
 
 		// SECOND PASS: IC is connected.
-		for (size_t j = 0; j < CELLS_PER_IC; ++j) {
+		for (size_t j = 0; j < CELLS_PER_IC(i); ++j) {
 			float cell_temp = voltageToTemp(getVoltage(ic[i].aux.a_codes[j]));
 			local_temp_conversions[i][j] = cell_temp;
 
@@ -92,6 +92,11 @@ void computeAllTemps(uint8_t tIC, cell_asic *ic) {
 			}
 
             tempSum += cell_temp;
+		}
+
+		// Set the 10th spot (9th index) for every odd-ic sub-array to NAN
+		for (size_t j = CELLS_PER_IC(i); j < MAX_CELLS_PER_IC; ++j) {
+			local_temp_conversions[i][j] = NAN;
 		}
 	}
 

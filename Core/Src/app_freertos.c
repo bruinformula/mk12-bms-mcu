@@ -139,23 +139,23 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of voltageTask */
-  osThreadDef(voltageTask, voltageFunction, osPriorityIdle, 0, 512);
+  osThreadDef(voltageTask, voltageFunction, osPriorityAboveNormal, 0, 512);
   voltageTaskHandle = osThreadCreate(osThread(voltageTask), NULL);
 
   /* definition and creation of tempTask */
-  osThreadDef(tempTask, tempFunction, osPriorityIdle, 0, 512);
+  osThreadDef(tempTask, tempFunction, osPriorityAboveNormal, 0, 512);
   tempTaskHandle = osThreadCreate(osThread(tempTask), NULL);
 
   /* definition and creation of safetyTask */
-  osThreadDef(safetyTask, safetyFunction, osPriorityNormal, 0, 512);
+  osThreadDef(safetyTask, safetyFunction, osPriorityHigh, 0, 512);
   safetyTaskHandle = osThreadCreate(osThread(safetyTask), NULL);
 
   /* definition and creation of currTask */
-  osThreadDef(currTask, currFunction, osPriorityIdle, 0, 512);
+  osThreadDef(currTask, currFunction, osPriorityAboveNormal, 0, 512);
   currTaskHandle = osThreadCreate(osThread(currTask), NULL);
 
   /* definition and creation of dataloggingTask */
-  osThreadDef(dataloggingTask, dataloggingFunction, osPriorityNormal, 0, 1024);
+  osThreadDef(dataloggingTask, dataloggingFunction, osPriorityBelowNormal, 0, 1024);
   dataloggingTaskHandle = osThreadCreate(osThread(dataloggingTask), NULL);
 
   /* definition and creation of prchgTask */
