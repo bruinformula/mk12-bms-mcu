@@ -7,7 +7,7 @@
 
 #include "balancing.h"
 
-static float voltage_conversions_snapshot[TOTAL_IC][CELLS_PER_IC];
+static float voltage_conversions_snapshot[TOTAL_IC][MAX_CELLS_PER_IC];
 static float local_lowest_cell_voltage;
 static uint32_t phase_start_time;
 volatile BalanceState balance_state = BALANCE_IDLE;
@@ -64,7 +64,7 @@ void balancingLoop(uint8_t tIC, cell_asic *ic) {
             }
 
             for (size_t i = 0; i < tIC; ++i) {
-                for (size_t j = 0; j < CELLS_PER_IC; ++j) {
+                for (size_t j = 0; j < CELLS_PER_IC(i); ++j) {
                     if (voltage_conversions_snapshot[i][j] > local_lowest_cell_voltage + BALANCE_VOLTAGE_THRESHOLD) {
                     	set_cell_pwm(ic, i, j);
                         num_unbalanced_cells++;

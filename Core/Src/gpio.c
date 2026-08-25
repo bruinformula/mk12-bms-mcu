@@ -38,7 +38,6 @@
         * Output
         * EVENT_OUT
         * EXTI
-     PB1   ------> SharedAnalog_PB1
 */
 void MX_GPIO_Init(void)
 {
@@ -52,7 +51,8 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, NEG_AIR_GND_Pin|POS_AIR_GND_Pin|PRECHARGE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, NEG_AIR_GND_Pin|POS_AIR_GND_Pin|PRECHARGE_Pin|SSR1_EN_Pin
+                          |SSR2_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, SPI3_CS_Pin|BMS_FAULT_Pin, GPIO_PIN_SET);
@@ -69,8 +69,10 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BALANCING_EN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : NEG_AIR_GND_Pin POS_AIR_GND_Pin PRECHARGE_Pin */
-  GPIO_InitStruct.Pin = NEG_AIR_GND_Pin|POS_AIR_GND_Pin|PRECHARGE_Pin;
+  /*Configure GPIO pins : NEG_AIR_GND_Pin POS_AIR_GND_Pin PRECHARGE_Pin SSR1_EN_Pin
+                           SSR2_EN_Pin */
+  GPIO_InitStruct.Pin = NEG_AIR_GND_Pin|POS_AIR_GND_Pin|PRECHARGE_Pin|SSR1_EN_Pin
+                          |SSR2_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -90,12 +92,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : CURRENT_SENSOR_LOW_Pin */
-  GPIO_InitStruct.Pin = CURRENT_SENSOR_LOW_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(CURRENT_SENSOR_LOW_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : SHUTDOWN_POWER_Pin */
   GPIO_InitStruct.Pin = SHUTDOWN_POWER_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
@@ -113,6 +109,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(CHARGE_SIGNAL_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : ADBMS_INTR1_Pin ADBMS_WAKE1_Pin ADBMS_INTR2_Pin ADBMS_WAKE2_Pin */
+  GPIO_InitStruct.Pin = ADBMS_INTR1_Pin|ADBMS_WAKE1_Pin|ADBMS_INTR2_Pin|ADBMS_WAKE2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);

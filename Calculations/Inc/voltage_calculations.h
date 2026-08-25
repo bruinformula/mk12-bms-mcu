@@ -24,7 +24,7 @@ typedef struct VOLTAGE_CONTEXT {
 	float lowest_cell_voltage;
 	float avg_cell_voltage;
 	float highest_cell_voltage;
-	float voltage_conversions[TOTAL_IC][CELLS_PER_IC];
+	float voltage_conversions[TOTAL_IC][MAX_CELLS_PER_IC];
 	int num_valid_cell_voltages;
 } VOLTAGE_CONTEXT;
 extern volatile VOLTAGE_CONTEXT voltage_context;
