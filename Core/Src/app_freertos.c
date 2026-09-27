@@ -33,6 +33,7 @@
 #include "prchg.h"
 #include "gui.h"
 #include "bms_state.h"
+#include "safety_handler.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,6 +67,13 @@ osThreadId balancingTaskHandle;
 osThreadId chargingTaskHandle;
 osThreadId socTaskHandle;
 osThreadId serialCmdTaskHandle;
+osTimerId ovDebounceTimerHandle;
+osTimerId uvDebounceTimerHandle;
+osTimerId otDebounceTimerHandle;
+osTimerId utDebounceTimerHandle;
+osTimerId ocDebounceTimerHandle;
+osTimerId disconnectDebounceTimerHandle;
+osTimerId airweldDebounceTimerHandle;
 osMutexId SPI_MUTEXHandle;
 osMutexId CAN_MUTEXHandle;
 osMutexId VOLTAGE_MUTEXHandle;
@@ -88,6 +96,13 @@ void balancingFunction(void const * argument);
 void chargingFunction(void const * argument);
 void socFunction(void const * argument);
 void serialCmdFunction(void const * argument);
+void ovDebounceCallback(void const * argument);
+void uvDebounceCallback(void const * argument);
+void otDebounceCallback(void const * argument);
+void utDebounceCallback(void const * argument);
+void ocDebounceCallback(void const * argument);
+void disconnectDebounceCallback(void const * argument);
+void airweldDebounceCallback(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -128,6 +143,35 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
+
+  /* Create the timer(s) */
+  /* definition and creation of ovDebounceTimer */
+  osTimerDef(ovDebounceTimer, ovDebounceCallback);
+  ovDebounceTimerHandle = osTimerCreate(osTimer(ovDebounceTimer), osTimerOnce, NULL);
+
+  /* definition and creation of uvDebounceTimer */
+  osTimerDef(uvDebounceTimer, uvDebounceCallback);
+  uvDebounceTimerHandle = osTimerCreate(osTimer(uvDebounceTimer), osTimerOnce, NULL);
+
+  /* definition and creation of otDebounceTimer */
+  osTimerDef(otDebounceTimer, otDebounceCallback);
+  otDebounceTimerHandle = osTimerCreate(osTimer(otDebounceTimer), osTimerOnce, NULL);
+
+  /* definition and creation of utDebounceTimer */
+  osTimerDef(utDebounceTimer, utDebounceCallback);
+  utDebounceTimerHandle = osTimerCreate(osTimer(utDebounceTimer), osTimerOnce, NULL);
+
+  /* definition and creation of ocDebounceTimer */
+  osTimerDef(ocDebounceTimer, ocDebounceCallback);
+  ocDebounceTimerHandle = osTimerCreate(osTimer(ocDebounceTimer), osTimerOnce, NULL);
+
+  /* definition and creation of disconnectDebounceTimer */
+  osTimerDef(disconnectDebounceTimer, disconnectDebounceCallback);
+  disconnectDebounceTimerHandle = osTimerCreate(osTimer(disconnectDebounceTimer), osTimerOnce, NULL);
+
+  /* definition and creation of airweldDebounceTimer */
+  osTimerDef(airweldDebounceTimer, airweldDebounceCallback);
+  airweldDebounceTimerHandle = osTimerCreate(osTimer(airweldDebounceTimer), osTimerOnce, NULL);
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
@@ -440,6 +484,62 @@ void serialCmdFunction(void const * argument)
 	processGUI_Cmd();
   }
   /* USER CODE END serialCmdFunction */
+}
+
+/* ovDebounceCallback function */
+void ovDebounceCallback(void const * argument)
+{
+  /* USER CODE BEGIN ovDebounceCallback */
+  BMS_ApplyFaultDebounce(FAULT_OVERVOLTAGE);
+  /* USER CODE END ovDebounceCallback */
+}
+
+/* uvDebounceCallback function */
+void uvDebounceCallback(void const * argument)
+{
+  /* USER CODE BEGIN uvDebounceCallback */
+  BMS_ApplyFaultDebounce(FAULT_UNDERVOLTAGE);
+  /* USER CODE END uvDebounceCallback */
+}
+
+/* otDebounceCallback function */
+void otDebounceCallback(void const * argument)
+{
+  /* USER CODE BEGIN otDebounceCallback */
+  BMS_ApplyFaultDebounce(FAULT_OVERTEMP);
+  /* USER CODE END otDebounceCallback */
+}
+
+/* utDebounceCallback function */
+void utDebounceCallback(void const * argument)
+{
+  /* USER CODE BEGIN utDebounceCallback */
+  BMS_ApplyFaultDebounce(FAULT_UNDERTEMP);
+  /* USER CODE END utDebounceCallback */
+}
+
+/* ocDebounceCallback function */
+void ocDebounceCallback(void const * argument)
+{
+  /* USER CODE BEGIN ocDebounceCallback */
+  BMS_ApplyFaultDebounce(FAULT_OVERCURRENT);
+  /* USER CODE END ocDebounceCallback */
+}
+
+/* disconnectDebounceCallback function */
+void disconnectDebounceCallback(void const * argument)
+{
+  /* USER CODE BEGIN disconnectDebounceCallback */
+  BMS_ApplyFaultDebounce(FAULT_ISOSPI_DISCONNECT);
+  /* USER CODE END disconnectDebounceCallback */
+}
+
+/* airweldDebounceCallback function */
+void airweldDebounceCallback(void const * argument)
+{
+  /* USER CODE BEGIN airweldDebounceCallback */
+  BMS_ApplyFaultDebounce(FAULT_AIR_WELD);
+  /* USER CODE END airweldDebounceCallback */
 }
 
 /* Private application code --------------------------------------------------*/

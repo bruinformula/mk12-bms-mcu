@@ -74,37 +74,42 @@ void apply_shutdown_power_state(bool shutdown_asserted) {
 
 volatile BMS_FaultRegister fault_register;
 
-static void BMS_UpdateDebouncedFaultBit(uint8_t fault_bit, bool active) {
-    uint8_t index = 0;
+static uint8_t BMS_GetFaultBitIndex(uint8_t fault_bit) {
+    uint8_t index = 0U;
     while ((fault_bit >>= 1U) != 0U) {
         index++;
     }
+    return index;
+}
 
-    if (index >= 8U) {
-        return;
+static osTimerId BMS_GetFaultDebounceTimer(uint8_t fault_bit) {
+    switch (fault_bit) {
+        case FAULT_OVERVOLTAGE:
+            return ovDebounceTimerHandle;
+        case FAULT_UNDERVOLTAGE:
+            return uvDebounceTimerHandle;
+        case FAULT_OVERTEMP:
+            return otDebounceTimerHandle;
+        case FAULT_UNDERTEMP:
+            return utDebounceTimerHandle;
+        case FAULT_OVERCURRENT:
+            return ocDebounceTimerHandle;
+        case FAULT_ISOSPI_DISCONNECT:
+            return disconnectDebounceTimerHandle;
+        case FAULT_AIR_WELD:
+            return airweldDebounceTimerHandle;
+        default:
+            return NULL;
     }
+}
+
+void BMS_ApplyFaultDebounce(uint8_t fault_bit) {
+    uint8_t index = BMS_GetFaultBitIndex(fault_bit);
 
     BMS_FaultDebounceState *state = &fault_debounce_states[index];
-    uint32_t now = HAL_GetTick();
-
-    if (state->requested_active != active) {
-        state->requested_active = active;
-        state->pending = true;
-        state->transition_time_ms = now;
-        return;
-    }
-
-    if (!state->pending) {
-        return;
-    }
-
-    uint32_t debounce_ms = active ? BMS_FAULT_SET_DEBOUNCE_MS : BMS_FAULT_CLEAR_DEBOUNCE_MS;
-    if ((now - state->transition_time_ms) < debounce_ms) {
-        return;
-    }
-
     state->pending = false;
-    if (active) {
+
+    if (state->requested_active) {
         if (!state->latched) {
             state->latched = true;
             BMS_SetFault(fault_bit);
@@ -113,6 +118,33 @@ static void BMS_UpdateDebouncedFaultBit(uint8_t fault_bit, bool active) {
         state->latched = false;
         BMS_ClearFault(fault_bit);
     }
+}
+
+static void BMS_UpdateDebouncedFaultBit(uint8_t fault_bit, bool active) {
+    uint8_t index = BMS_GetFaultBitIndex(fault_bit);
+    if (index >= 8U) {
+        return;
+    }
+
+    BMS_FaultDebounceState *state = &fault_debounce_states[index];
+    osTimerId timer = BMS_GetFaultDebounceTimer(fault_bit);
+    if (timer == NULL) {
+        return;
+    }
+
+    if (state->requested_active == active) {
+        if (state->pending) {
+            return;
+        }
+        if ((active && state->latched) || (!active && !state->latched)) {
+            return;
+        }
+    }
+
+    state->requested_active = active;
+    state->pending = true;
+    osTimerStop(timer);
+    osTimerStart(timer, active ? BMS_FAULT_SET_DEBOUNCE_MS : BMS_FAULT_CLEAR_DEBOUNCE_MS);
 }
 
 void BMS_UpdateFaultDebounced(uint8_t fault, bool active) {

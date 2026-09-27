@@ -60,6 +60,7 @@ typedef struct {
 } BMS_FaultDebounceState;
 
 void BMS_UpdateFaultDebounced(uint8_t fault, bool active);
+void BMS_ApplyFaultDebounce(uint8_t fault);
 uint8_t BMS_GetFaultRegister();
 void BMS_CheckFaultRegister();
 
