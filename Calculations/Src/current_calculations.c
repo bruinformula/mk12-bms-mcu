@@ -30,24 +30,16 @@ void checkAIRWeld(float selected_current) {
 	bool are_airs_open = (pos_air == GPIO_PIN_RESET) &&
 						(neg_air == GPIO_PIN_RESET) &&
 						(precharge == GPIO_PIN_RESET);
-
+	bool air_weld_detected = false;
 	if (are_airs_open) {
 		if (fabsf(selected_current) > AIR_WELD_CURRENT_THRESHOLD) {
-			if (air_weld_set_count < AIR_WELD_SET_SAMPLES) {
-				air_weld_set_count++;
-			}
-		} else {
-			// Current not above threshold so reset sample count back to zero
-			air_weld_set_count = 0;
+			air_weld_detected = true;
 		}
-	} else {
-		// AIRs closed already
-		air_weld_set_count = 0;
 	}
 
 #if (BMS_FAULT_AIR_WELD == BMS_FAULT_ENABLED)
-	if (air_weld_set_count >= AIR_WELD_SET_SAMPLES ) {
-		BMS_SetFault(FAULT_AIR_WELD);
+	if (are_airs_open) {
+		BMS_UpdateFaultDebounced(FAULT_AIR_WELD, air_weld_detected);
 	}
 #endif
 }
@@ -108,9 +100,9 @@ void calculateCurrent() {
 #endif
 
 	if (faults_set) {
-		BMS_SetFault(faults_set);
+		BMS_UpdateFaultDebounced(faults_set, true);
 	}
 	if (faults_clear) {
-		BMS_ClearFault(faults_clear);
+		BMS_UpdateFaultDebounced(faults_clear, false);
 	}
 }
